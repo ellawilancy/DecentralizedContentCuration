@@ -51,3 +51,28 @@
     )
 )
 
+;; Content Management Functions
+(define-public (submit-content (content-hash (buff 32)))
+    (let
+        (
+            (content-id (+ (var-get content-counter) u1))
+            (stake-required (var-get min-stake-amount))
+        )
+        (asserts! (>= (stx-get-balance tx-sender) stake-required) ERR-INSUFFICIENT-STAKE)
+        (try! (stx-transfer? stake-required tx-sender (as-contract tx-sender)))
+        (map-set contents
+            { content-id: content-id }
+            {
+                author: tx-sender,
+                content-hash: content-hash,
+                upvotes: u0,
+                downvotes: u0,
+                status: "active",
+                stake: stake-required,
+                timestamp: block-height
+            }
+        )
+        (var-set content-counter content-id)
+        (ok content-id)
+    )
+)
