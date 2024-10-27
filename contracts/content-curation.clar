@@ -76,3 +76,52 @@
         (ok content-id)
     )
 )
+
+(define-public (vote-on-content (content-id uint) (vote-type (string-ascii 10)))
+    (let
+        (
+            (content (unwrap! (map-get? contents { content-id: content-id }) ERR-CONTENT-NOT-FOUND))
+            (curator-stat (default-to
+                { total-votes: u0, reputation: u0, rewards-earned: u0 }
+                (map-get? curator-stats { curator: tx-sender })
+            ))
+        )
+        ;; Check if already voted
+        (asserts! (is-none (map-get? votes { content-id: content-id, voter: tx-sender })) ERR-ALREADY-VOTED)
+
+        ;; Record vote
+        (map-set votes
+            { content-id: content-id, voter: tx-sender }
+            { vote-type: vote-type }
+        )
+
+        ;; Update content stats
+        (map-set contents
+            { content-id: content-id }
+            (merge content
+                {
+                    upvotes: (if (is-eq vote-type "upvote")
+                        (+ (get upvotes content) u1)
+                        (get upvotes content)
+                    ),
+                    downvotes: (if (is-eq vote-type "downvote")
+                        (+ (get downvotes content) u1)
+                        (get downvotes content)
+                    )
+                }
+            )
+        )
+
+        ;; Update curator stats
+        (map-set curator-stats
+            { curator: tx-sender }
+            {
+                total-votes: (+ (get total-votes curator-stat) u1),
+                reputation: (+ (get reputation curator-stat) u1),
+                rewards-earned: (get rewards-earned curator-stat)
+            }
+        )
+
+        (ok true)
+    )
+)
