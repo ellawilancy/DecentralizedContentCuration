@@ -39,3 +39,15 @@
     { content-id: uint, voter: principal }
     { vote-type: (string-ascii 10) }
 )
+
+;; Content Counter
+(define-data-var content-counter uint u0)
+
+;; Administrative Functions
+(define-public (set-min-stake (amount uint))
+    (begin
+        (asserts! (is-eq tx-sender contract-owner) ERR-NOT-AUTHORIZED)
+        (ok (var-set min-stake-amount amount))
+    )
+)
+
