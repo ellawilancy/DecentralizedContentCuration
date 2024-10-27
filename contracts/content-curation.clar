@@ -148,3 +148,16 @@
         (ok true)
     )
 )
+
+;; Getter Functions
+(define-read-only (get-content (content-id uint))
+    (map-get? contents { content-id: content-id })
+)
+
+(define-read-only (get-curator-stats (curator principal))
+    (map-get? curator-stats { curator: curator })
+)
+
+(define-read-only (get-vote (content-id uint) (voter principal))
+    (map-get? votes { content-id: content-id, voter: voter })
+)
