@@ -125,3 +125,26 @@
         (ok true)
     )
 )
+
+;; Reward Distribution Functions
+(define-public (distribute-rewards (content-id uint))
+    (let
+        (
+            (content (unwrap! (map-get? contents { content-id: content-id }) ERR-CONTENT-NOT-FOUND))
+            (author-reward (/ (* (get stake content) u60) u100))  ;; 60% to content author
+            (curator-reward (/ (* (get stake content) u40) u100)) ;; 40% to curators
+        )
+        (asserts! (> (+ (get upvotes content) (get downvotes content)) u0) ERR-INVALID-CONTENT)
+
+        ;; Transfer rewards to author
+        (try! (as-contract (stx-transfer? author-reward (as-contract tx-sender) (get author content))))
+
+        ;; Update content status
+        (map-set contents
+            { content-id: content-id }
+            (merge content { status: "rewarded" })
+        )
+
+        (ok true)
+    )
+)
